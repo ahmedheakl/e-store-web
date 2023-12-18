@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CloudQuery</title>
+    <link rel="stylesheet" href="styles/style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="icon" type="image/x-icon" href="/assets/images/pageIcon.ico">
+</head>
+
+<body>
+    <nav class="nav">
+        <div class="main-div">
+            <a href="/index.html">
+                <i class="glyphicon glyphicon-cloud"></i>
+                CloudQuery
+            </a>
+        </div>
+        <div class="main-div" id="nav-auth">
+        </div>
+        <div class="search-container">
+            <input class="search-input" name="search" id="search-input" type="search" placeholder="Search a product ...">
+            <div class="filter-container">
+                <button class="dropbtn"><i class="glyphicon glyphicon-filter" style="padding-right: 5px"></i></button>
+                <div class="dropdown-content" id="filter-menu">
+
+                </div>
+            </div>
+        </div>
+        <a class="material-icons shopping-cart-icon" id="shopping-cart-button">shopping_cart</a>
+        <div class="shopping-cart" id="cart">
+            There is nothing in your cart.
+        </div>
+        
+    </nav>
+    <div class="container">
+        <div class="grid" id="main-grid">
+        </div>
+    </div>
+</body>
+<script type="module" src="scripts/index.js"></script>
+</html>
