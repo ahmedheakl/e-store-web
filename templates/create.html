@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CloudQuery</title>
+    <link rel="stylesheet" href="../styles/style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/pageIcon.ico">
+</head>
+
+<body>
+    
+    <nav class="nav">
+        <div class="main-div">
+            <a href="/index.html">
+                <i class="glyphicon glyphicon-cloud"></i>
+                CloudQuery
+            </a>
+        </div>
+    </nav> 
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-container">
+            <div class="loading"></div>
+            <span>Loading...</span>
+        </div>
+    </div>
+    <div class="create-product-container" id="container">
+        <form action="#" id="create-product-form">
+            <h1>Create Product</h1>
+            <input name="image" type="file" id="create-image" required/>
+            <input name="product_name" type="text" placeholder="Product name" id="create-name" required/>
+            <input name="brand_name" type="text" placeholder="Brand name" id="create-brand" required/>
+            <select name="nationality" id="create-nationality" required>
+            </select>
+            <input name="price" type="number" placeholder="Price" id="create-price" value=10 required/>
+            <input name="quantity" type="number" placeholder="Quantity" id="create-quantity" value=1 required/>
+            <span class="error-label" id="create-error">* Invalid</span>
+            <span class="success-label" id="create-sucess">Created Successfully!</span>
+            <button id="create-button">Create</button>
+        </form>
+    </div>
+    
+</body>
+<script src="../scripts/create.js"></script>
+</html>

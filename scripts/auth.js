@@ -1,11 +1,5 @@
-// const BASEURL = "https://container-service-2.e41513gjaiic0.eu-central-1.cs.amazonlightsail.com/"
-// var API = "https://container-service-1.e41513gjaiic0.eu-central-1.cs.amazonlightsail.com";
-const BASEURL = 'https://grocery-shop-api-9pgb.onrender.com'
 const API = 'https://grocery-shop-api-9pgb.onrender.com'
 
-if (localStorage.getItem('cookie') !== '') {
-  location.replace(BASEURL)
-}
 const signUpButton = document.getElementById('signUp')
 const signInButton = document.getElementById('signIn')
 const container = document.getElementById('container')
@@ -33,13 +27,14 @@ async function login (email, password) {
     method: 'POST',
     body: JSON.stringify(data),
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
     }
   }
 
   const loginButton = document.getElementById('login-button')
   loginButton.innerHTML = 'Loading...'
-  let rawResponse = await fetch(`${API}/api/user/login/`, requestOptions)
+  let rawResponse = await fetch(`${API}/api/login/`, requestOptions)
   let res = await rawResponse.json()
   loginButton.innerHTML = 'Login'
   if (rawResponse.status == 200) {
@@ -80,7 +75,7 @@ async function singUp (name, email, password) {
   }
   const signupSubmit = document.getElementById('signup-button')
   signupSubmit.innerHTML = 'Loading...'
-  let rawResponse = await fetch(`${API}/api/user/signup/`, requestOptions)
+  let rawResponse = await fetch(`${API}/api/signup/`, requestOptions)
   signupSubmit.innerHTML = 'Sign Up'
   let res = await rawResponse.json()
 

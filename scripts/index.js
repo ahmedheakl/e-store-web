@@ -1,6 +1,3 @@
-// const BASEURL = "https://container-service-2.e41513gjaiic0.eu-central-1.cs.amazonlightsail.com/"
-// var API = "https://container-service-1.e41513gjaiic0.eu-central-1.cs.amazonlightsail.com";
-const BASEURL = 'https://grocery-shop-api-9pgb.onrender.com'
 const API = 'https://grocery-shop-api-9pgb.onrender.com'
 
 const navAuth = document.getElementById('nav-auth')
@@ -8,6 +5,10 @@ let element
 const token = localStorage.getItem('token')
 if (token) {
   navAuth.innerHTML = `
+        <a href="/templates/create.html" style="cursor: pointer;">
+            <i class="glyphicon glyphicon-plus" style="padding-right: 5px"></i>
+            Create
+        </a>
         <a href="/templates/auth.html" id="logout-button">
             <i class="glyphicon glyphicon-log-out" style="padding-right: 5px"></i>
             Logout
@@ -39,28 +40,19 @@ cartButton.addEventListener('click', e => {
 })
 
 let data = []
+let cartData = []
 
-/**
- * fetch query data from api
- * @param {String} query body of the query in the following form '"<body>"'
- * @returns {object} results of the query in JSON format
- */
-async function getDataWithQuery (query, schema) {
-  let raw = `{"query":"${query}", "schema":"${schema}"}`
+async function deleteProduct (productId) {
+  let data = { id: productId }
   let requestOptions = {
-    method: 'POST',
-    credentials: 'include',
-    body: raw,
-    redirect: 'follow'
+    method: 'DELETE',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    }
   }
-  try {
-    let dataJson = await fetch(`${API}/query/`, requestOptions)
-    data = await dataJson.json()
-  } catch (error) {
-    console.log(error)
-  }
-
-  return data
+  await fetch(`${API}/api/products`, requestOptions)
 }
 
 /**
@@ -69,15 +61,22 @@ async function getDataWithQuery (query, schema) {
  * @returns {any}  none
  */
 function createItemElements (data) {
+  const user = localStorage.getItem('user')
+  const userId = user ? JSON.parse(user).id : null
   mainGrid.innerHTML = ''
   for (let i = 0; i < data.length; i++) {
     let dataItem = data[i]
-    const item = `
+    let item = `
             <div class="grid-item-container">
                 <div class="grid-item-name">
                     <h3>
-                        ${dataItem.product_name}
+                        ${dataItem.product_name} [<span>${
+      dataItem.quantity_in_stock
+    }</span>]
                     </h3>
+                </div>
+                <div class="grid-item-image-container">
+                    <img src="${dataItem.image}" />
                 </div>
                 <div class="grid-item-description-price">
                     <div class="grid-item-description">
@@ -86,8 +85,23 @@ function createItemElements (data) {
                         </p>
                     </div>
                 </div>
+                <div class="grid-item-description-price">
+                    <div class="grid-item-description">
+                        <p>
+                            Sold by <span style="font-weight: bold">${
+                              dataItem.user.name
+                            }</span>
+                        </p>
+                    </div>
+                </div>
+                
                 <div class="grid-item-price">
                     <p> ${dataItem.price}$
+                    </p>
+                </div>
+
+                <div class="grid-item-country grid-item-${dataItem.country.name.toLowerCase()}">
+                    <p> ${dataItem.country.name}
                     </p>
                 </div>
             </div>
@@ -97,12 +111,30 @@ function createItemElements (data) {
                 </button>
                 <button class="grid-item-button button-delete" type="button"><i
                         class="material-icons">exposure_neg_1</i></button>
-            </div>`
+            </div>
+            `
+    if (userId == dataItem.user.id) {
+      item += `
+      <div class="control-buttons">
+        <button><a href="/templates/edit.html?id=${dataItem.id}">Edit</a></button>
+        <button class="delete-button">Delete</button>
+      </div>
+      `
+    }
     const element = document.createElement('div')
     element.innerHTML = item
     element.className = 'grid-item'
     element.setAttribute('data-id', dataItem.id)
     mainGrid.append(element)
+    if (userId == dataItem.user.id) {
+      const deleteButton = element.getElementsByClassName('delete-button')[0]
+      deleteButton.addEventListener('click', async function (e) {
+        deleteButton.innerHTML = 'Deleting...'
+        await deleteProduct(dataItem.id)
+        deleteButton.innerHTML = 'Delete'
+        window.location.reload()
+      })
+    }
   }
 }
 
@@ -112,12 +144,21 @@ function createItemElements (data) {
  * @returns {boolean} status flag for valid/invalid addition
  */
 async function addItemToCart (itemid) {
+  let quantity = 0
+  let exists = false
+  for (let item of cartData) {
+    if (item.product.id == itemid) {
+      quantity = item.quantity
+      exists = true
+      break
+    }
+  }
   let data = {
-    productId: itemid,
-    quantity: 1
+    product_id: itemid,
+    quantity: quantity + 1
   }
   let requestOptions = {
-    method: 'POST',
+    method: exists ? 'PUT' : 'POST',
     body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json',
@@ -125,7 +166,7 @@ async function addItemToCart (itemid) {
     }
   }
 
-  let rawResponse = await fetch(`${API}/api/user/add-item-cart`, requestOptions)
+  let rawResponse = await fetch(`${API}/api/items`, requestOptions)
   let res = await rawResponse.json()
   if (res.response == false) {
     alert(res.message)
@@ -152,10 +193,7 @@ async function removeItemToCart (itemid) {
     }
   }
 
-  let rawResponse = await fetch(
-    `${API}/api/user/delete-item-cart`,
-    requestOptions
-  )
+  let rawResponse = await fetch(`${API}/api/items`, requestOptions)
   let res = await rawResponse.json()
   if (res.response == false) {
     alert(res.message)
@@ -171,7 +209,7 @@ async function removeItemToCart (itemid) {
  */
 async function updateCart () {
   let innerHTML = ''
-  var data = await fetch(`${API}/api/user/show-items-cart`, {
+  var data = await fetch(`${API}/api/items`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -180,6 +218,7 @@ async function updateCart () {
   })
   var items = await data.json()
   items = items.items
+  cartData = items
   if (items.length === 0) {
     innerHTML = 'There is nothing your cart.'
     cart.innerHTML = innerHTML
@@ -197,12 +236,20 @@ async function updateCart () {
         `
     for (var i = 0; i < items.length; i++) {
       var item = items[i]
-      // let subtotalPrice = item.quantity * item.price
-      // totalPrice += subtotalPrice
-      // subtotalPrice = data.Total_price.toFixed(2)
+      let price = parseFloat(item.product.price)
+      let quantity = parseInt(item.quantity)
+      let subtotalPrice = price * quantity
+      totalPrice += subtotalPrice
+      subtotalPrice = subtotalPrice.toFixed(2)
       innerHTML += `
                 <tr>
+                    <td>
+                        <img src="${item.product.image}">
+                    </td>
+                    <td>${item.product.product_name}</td>
+                    <td>${item.product.price}$</td>
                     <td>${item.quantity}</td>
+                    <td>${subtotalPrice}$</td>
                 </tr>
             `
     }
@@ -280,7 +327,7 @@ async function getAllProducts () {
   let requestOptions = {
     method: 'GET'
   }
-  let rawResponse = await fetch(`${API}/api/user/all-products/`, requestOptions)
+  let rawResponse = await fetch(`${API}/api/products`, requestOptions)
   let res = await rawResponse.json()
   return res
 }
