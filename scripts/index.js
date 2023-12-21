@@ -195,7 +195,7 @@ async function addItemToCart (itemid) {
  */
 async function removeItemToCart (itemid) {
   let data = {
-    productId: itemid
+    product_id: itemid
   }
   let requestOptions = {
     method: 'DELETE',
@@ -290,8 +290,8 @@ async function updateCart () {
         id: cartId
       }
       let requestOptions = {
-        method: 'PUT',
-        data: JSON.stringify(data),
+        method: 'POST',
+        body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`

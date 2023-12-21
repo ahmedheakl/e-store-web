@@ -123,6 +123,6 @@ signUpForm.addEventListener('submit', async e => {
   const status = await singUp(name, email, password)
 
   if (status) {
-    location.replace('templates/auth.html')
+    location.replace('/templates/auth.html')
   }
 })
