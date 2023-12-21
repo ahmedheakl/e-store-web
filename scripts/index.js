@@ -27,6 +27,15 @@ if (token) {
  `
 }
 
+const overlayLoading = document.getElementById('loading-overlay-index')
+function startLoading () {
+  overlayLoading.style.display = 'flex'
+}
+
+function stopLoading () {
+  overlayLoading.style.display = 'none'
+}
+
 const mainGrid = document.getElementById('main-grid')
 const cartButton = document.getElementById('shopping-cart-button')
 
@@ -106,17 +115,21 @@ function createItemElements (data) {
                 </div>
             </div>
             <div class="grid-item-buttons">
-                <button class="grid-item-button button-add" type="button">
+                <button class="grid-item-button button-add" type="button" id="button-add-${
+                  dataItem.id
+                }">
                     <i class="material-icons">exposure_plus_1</i>
                 </button>
-                <button class="grid-item-button button-delete" type="button"><i
-                        class="material-icons">exposure_neg_1</i></button>
+                <button class="grid-item-button button-delete" type="button" id="button-delete-${
+                  dataItem.id
+                }">
+                  <i class="material-icons">exposure_neg_1</i>
+                </button>
             </div>
             `
     if (userId == dataItem.user.id) {
       item += `
       <div class="control-buttons">
-        <button><a href="/templates/edit.html?id=${dataItem.id}">Edit</a></button>
         <button class="delete-button">Delete</button>
       </div>
       `
@@ -218,8 +231,8 @@ async function updateCart () {
   })
   var items = await data.json()
   items = items.items
-  cartData = items
-  if (items.length === 0) {
+  cartData = items ?? []
+  if (items == null || items.length === 0) {
     innerHTML = 'There is nothing your cart.'
     cart.innerHTML = innerHTML
   } else {
@@ -272,15 +285,23 @@ async function updateCart () {
     // setup checkout event listener
     const checkoutButton = document.getElementById('checkout-button')
     checkoutButton.addEventListener('click', async function (e) {
-      let requestOptions = {
-        credentials: 'include',
-        method: 'GET',
-        redirect: 'follow'
+      const cartId = items[0].shopping_cart.id
+      let data = {
+        id: cartId
       }
-      let rawResponse = await fetch(`${API}/checkout/`, requestOptions)
+      let requestOptions = {
+        method: 'PUT',
+        data: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      }
+      checkoutButton.innerHTML = 'Checking out...'
+      let rawResponse = await fetch(`${API}/api/payments`, requestOptions)
       let res = await rawResponse.json()
-      console.log(res)
-      if (res.response == true) {
+      checkoutButton.innerHTML = 'Checkout'
+      if (rawResponse.status == 200) {
         alert(res.message)
         updateCart()
       }
@@ -298,7 +319,9 @@ function setUpCartEventListeners () {
       'grid-item-button button-add'
     )[0]
     addButton.addEventListener('click', async function (e) {
+      addButton.innerHTML = 'Adding...'
       let status = await addItemToCart(elementId)
+      addButton.innerHTML = '<i class="material-icons">exposure_plus_1</i>'
       if (status == false) return
       updateCart()
     })
@@ -308,16 +331,10 @@ function setUpCartEventListeners () {
       'grid-item-button button-delete'
     )[0]
     removeButton.addEventListener('click', async function (e) {
+      removeButton.innerHTML = 'Removing...'
       let status = await removeItemToCart(elementId)
+      removeButton.innerHTML = '<i class="material-icons">exposure_neg_1</i>'
       if (status == false) return
-      // const itemId = parseInt(elementId);
-      // if(itemId in cartData){
-      //     if(cartData[elementId].quantity == 1){
-      //         delete cartData[elementId];
-      //     }else{
-      //         cartData[elementId].quantity -= 1;
-      //     }
-      // }
       updateCart()
     })
   }
@@ -337,6 +354,7 @@ async function getAllProducts () {
  * @returns {any} none
  */
 async function main () {
+  startLoading()
   const brands = new Set()
   const res = await getAllProducts()
   const data = res.products
@@ -381,6 +399,7 @@ async function main () {
   })
 
   setUpCartEventListeners()
+  stopLoading()
 }
 
 main()
